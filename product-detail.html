@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Details | BlueTrack</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 2rem;
+        background: #f9fafb;
+        color: #1f2937;
+      }
+
+      .product-detail-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: auto;
+      }
+
+      .product-top-section {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      @media (min-width: 1024px) {
+        .product-top-section {
+          flex-direction: row;
+        }
+      }
+
+      #product-gallery {
+        flex: 1;
+      }
+
+      .main-image-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .main-image {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+
+      .thumbnails {
+        display: flex;
+        gap: 10px;
+        margin-top: 1rem;
+        overflow-x: auto;
+      }
+
+      .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: 0.2s;
+        flex-shrink: 0;
+      }
+
+      .thumbnail.active {
+        border-color: #2563eb;
+      }
+
+      #product-specs table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        font-family: "Poppins", sans-serif;
+        font-size: 16px;
+        color: #2c3e50;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      #product-specs th,
+      #product-specs td {
+        padding: 16px 20px;
+        text-align: left;
+        background: #fff;
+        transition: background-color 0.3s ease;
+      }
+
+      #product-specs thead tr {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      #product-specs tbody tr:not(:last-child) {
+        border-bottom: 1px solid #e1e8f7;
+      }
+
+      #product-specs tbody tr:hover {
+        background-color: #f0f5ff;
+        cursor: default;
+      }
+
+      #product-specs tbody td {
+        color: #34495e;
+      }
+
+      #product-specs tbody tr:nth-child(even) td {
+        background-color: #f9fbff;
+      }
+
+      #product-specs tbody tr:hover td {
+        background-color: #dbe9ff !important;
+        color: #1a1f36;
+      }
+      #product-description {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 24px rgba(37, 117, 252, 0.15);
+        color: #2e3a59;
+        font-family: "Poppins", sans-serif;
+        font-size: 18px;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 2rem auto 0;
+        position: relative;
+        overflow-wrap: break-word;
+      }
+
+      #product-description h2 {
+        font-weight: 700;
+        font-size: 2rem;
+        color: #2563eb;
+        margin-bottom: 1rem;
+        border-left: 6px solid #2563eb;
+        padding-left: 0.75rem;
+      }
+
+      #product-description p {
+        margin-bottom: 1.2rem;
+        color: #4b5563;
+      }
+
+      #product-description ul {
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+        list-style-type: disc;
+        color: #4b5563;
+      }
+
+      #product-description li {
+        margin-bottom: 0.6rem;
+      }
+
+      #product-description strong {
+        color: #1e40af;
+      }
+
+      .fade-in-description {
+        animation: fadeSlideIn 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      @keyframes fadeSlideIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1,
+      h3 {
+        margin-bottom: 1rem;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="product-detail-wrapper fade-in">
+      <div class="product-top-section">
+        <div id="product-gallery"></div>
+        <div id="product-specs"></div>
+      </div>
+      <div id="product-description"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get("id");
+
+        if (!productId) {
+          document.body.innerHTML =
+            "<p style='text-align:center;'>No product ID found in URL.</p>";
+          return;
+        }
+
+        try {
+          const product = await fetchProductById(productId);
+          renderProductDetails(product);
+        } catch (err) {
+          console.error("Fetch error:", err);
+          document.body.innerHTML = `<p style='text-align:center;'>Unable to load product details.<br><small>${err.message}</small></p>`;
+        }
+      });
+
+      async function fetchProductById(id) {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`);
+        }
+
+        return await res.json();
+      }
+
+      function renderProductDetails(product) {
+        const gallery = document.getElementById("product-gallery");
+        const specs = document.getElementById("product-specs");
+        const description = document.getElementById("product-description");
+
+        // Helper function to check if image loads successfully
+        function checkImage(url) {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+          });
+        }
+
+        // Validate all images and collect valid ones
+        Promise.all(product.images.map((url) => checkImage(url))).then(
+          (results) => {
+            const validImages = product.images.filter((_, i) => results[i]);
+
+            // If no valid images, use placeholder
+            if (validImages.length === 0) {
+              validImages.push(
+                "https://via.placeholder.com/400x300?text=No+Image"
+              );
+            }
+
+            // Render main image and thumbnails
+            gallery.innerHTML = `
+            <div class="main-image-container">
+              <img id="main-product-image" class="main-image" src="${validImages[0]}" alt="${product.name}" />
+            </div>
+            <div class="thumbnails" id="product-thumbnails"></div>
+          `;
+
+            const thumbnailsContainer =
+              document.getElementById("product-thumbnails");
+            validImages.forEach((img, index) => {
+              const thumb = document.createElement("img");
+              thumb.src = img;
+              thumb.classList.add("thumbnail");
+              if (index === 0) thumb.classList.add("active");
+              thumb.addEventListener("click", () => {
+                document.getElementById("main-product-image").src = img;
+                document
+                  .querySelectorAll(".thumbnail")
+                  .forEach((t) => t.classList.remove("active"));
+                thumb.classList.add("active");
+              });
+              thumbnailsContainer.appendChild(thumb);
+            });
+          }
+        );
+
+        specs.innerHTML = product.specification;
+        description.innerHTML = product.description;
+      }
+    </script>
+  </body>
+</html>
